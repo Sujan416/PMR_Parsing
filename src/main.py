@@ -20,23 +20,6 @@ def load_all_json_data(foldejson_data_folder_pathr_path):
     return data_list
 
 
-def try_render_with_data(template_str, data_sources):
-    """Try rendering the template string using any of the JSON data sources"""
-    env = Environment()
-    ast = env.parse(template_str)
-    variables = meta.find_undeclared_variables(ast)
-
-    for data in data_sources:
-        try:
-            # Check if all variables exist in this data source
-            if all(resolve_variable(var, data) is not None for var in variables):
-                template = Template(template_str)
-                return template.render(data)
-        except Exception:
-            continue
-    # If no match, return original string
-    return template_str
-
 
 def try_render_with_data(template_str, data_sources):
     """Try rendering the template string using any of the JSON data sources"""
@@ -47,7 +30,12 @@ def try_render_with_data(template_str, data_sources):
     for data in data_sources:
         try:
             # Check if all variables exist in this data source
-            if all(resolve_variable(var, data) is not None for var in variables):
+            all_vars_exist = True
+            for var in variables:
+                if resolve_variable(var, data) is None:
+                    all_vars_exist = False
+                    break
+            if all_vars_exist:
                 template = Template(template_str)
                 return template.render(data)
         except Exception:
