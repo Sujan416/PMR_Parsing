@@ -3,6 +3,7 @@ import json
 import os
 from jinja2 import Environment, meta, Template
 from docx.enum.text import WD_COLOR_INDEX
+import sys
 
 
 def load_all_json_data(foldejson_data_folder_pathr_path):
@@ -58,7 +59,7 @@ def resolve_variable(var_path, data):
 
 def process_docx(doc, data_sources):
     """Replace Jinja2 templates in all table cells with resolved values"""
-    highlight_words = {'f', 'stopped', 'failed', 'error' }
+    highlight_words = ['f', 'stopped', 'failed', 'error' ]
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
@@ -78,13 +79,22 @@ def process_docx(doc, data_sources):
 
 
 if __name__ == "__main__":
-    template_file_path = r"C:\\ProjectFiles\\Maintenance\\Projects\\PMR_Parsing\\docs\\SICE-WCXS&M-M4M5-RPT-SEP25-D07_Template.docx"
-    output_file = r"C:\\ProjectFiles\\Maintenance\\Projects\\PMR_Parsing\\docs\\SICE-WCXS&M-M4M5-RPT-SEP25-D07.docx"
-    json_data_folder_path = r"C:\\ProjectFiles\\Maintenance\\Projects\\PMR_Parsing\\data\\2025-09-12_WCX3A"
+    if len(sys.argv) > 2:
+        template_file_path = sys.argv[1]
+        output_file = sys.argv[2]
+        json_data_folder_path = sys.argv[3]
+        
+        json_data_list = load_all_json_data(json_data_folder_path)
+        doc = Document(template_file_path)
+        process_docx(doc, json_data_list)
+        doc.save(output_file)
+        print(f"Saved filled document to: {output_file}")
 
-    json_data_list = load_all_json_data(json_data_folder_path)
-    doc = Document(template_file_path)
-    process_docx(doc, json_data_list)
-    doc.save(output_file)
-    print(f"Saved filled document to: {output_file}")
+    else:
+        print("Usage: python main.py <template_file_path> <output_file> <json_data_folder_path>")
+        exit(1)
+    # template_file_path = r"C:\\ProjectFiles\\Maintenance\\Projects\\PMR_Parsing\\docs\\SICE-WCXS&M-M4M5-RPT-SEP25-D07_Template.docx"
+    # output_file = r"C:\\ProjectFiles\\Maintenance\\Projects\\PMR_Parsing\\docs\\SICE-WCXS&M-M4M5-RPT-SEP25-D07.docx"
+    # json_data_folder_path = r"C:\\ProjectFiles\\Maintenance\\Projects\\PMR_Parsing\\data\\2025-09-12_WCX3A"
+
 
