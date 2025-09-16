@@ -2,7 +2,7 @@ from docx import Document
 import json
 import os
 from jinja2 import Environment, meta, Template
-
+from docx.enum.text import WD_COLOR_INDEX
 
 
 def load_all_json_data(foldejson_data_folder_pathr_path):
@@ -58,13 +58,23 @@ def resolve_variable(var_path, data):
 
 def process_docx(doc, data_sources):
     """Replace Jinja2 templates in all table cells with resolved values"""
+    highlight_words = {'f', 'stopped', 'failed', 'error' }
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
                 original_text = cell.text.strip()
                 if '{' in original_text and '}' in original_text:
                     new_text = try_render_with_data(original_text, data_sources)
-                    cell.text = new_text
+                    # cell.text = new_text.strip()
+                else:
+                    new_text = original_text
+                cell.text = ''  # Clear existing content
+                p = cell.paragraphs[0]
+                run = p.add_run(new_text.strip())
+
+                if new_text.strip().lower() in highlight_words:
+                    run.font.highlight_color = WD_COLOR_INDEX.YELLOW
+
 
 
 if __name__ == "__main__":
